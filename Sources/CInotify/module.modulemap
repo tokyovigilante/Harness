@@ -1,0 +1,4 @@
+module CInotify [system] {
+  header "cinotify.h"
+  export *
+}

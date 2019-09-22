@@ -1,0 +1,5 @@
+module CGLib {
+    umbrella header "cglib.h"
+    export *
+    link "glib-2.0"
+}
