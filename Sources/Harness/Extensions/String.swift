@@ -10,7 +10,7 @@ public extension String {
     - Returns: 'String' object.
     */
     func truncate (_ length: Int, trailing: String = "…") -> String {
-        return (self.count > length) ? self.prefix(length-1) + trailing : self
+        return (self.count > length && self.count > 1) ? self.prefix(length-1) + trailing : self
     }
 
     func appendLine(to url: URL) throws {
