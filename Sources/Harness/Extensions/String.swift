@@ -26,6 +26,17 @@ public extension String {
          try data.append(to: url)
      }
 
+     // From https://useyourloaf.com/blog/empty-strings-in-swift/
+     var isBlank: Bool {
+         return allSatisfy { $0.isWhitespace }
+    }
+}
+
+// Also from https://useyourloaf.com/blog/empty-strings-in-swift/
+extension Optional where Wrapped == String {
+    var isBlank: Bool {
+        return self?.isBlank ?? true
+    }
 }
 
 extension Character {
