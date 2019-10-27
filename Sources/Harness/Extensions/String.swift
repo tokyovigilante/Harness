@@ -26,6 +26,13 @@ public extension String {
          try data.append(to: url)
      }
 
+     var firstParagraph: String {
+        if self.isEmpty {
+            return self
+        }
+        return self.components(separatedBy: CharacterSet.newlines).first ?? self
+     }
+
      // From https://useyourloaf.com/blog/empty-strings-in-swift/
      var isBlank: Bool {
          return allSatisfy { $0.isWhitespace }

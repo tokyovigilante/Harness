@@ -2,14 +2,16 @@ import XCTest
 @testable import Harness
 
 final class HarnessTests: XCTestCase {
-    func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct
-        // results.
-        XCTAssertEqual(Harness().text, "Hello, World!")
+
+    func testStringFirstParagraph () {
+        XCTAssertEqual("".firstParagraph, "")
+        XCTAssertEqual("Hello\nWorld".firstParagraph, "Hello")
+        XCTAssertEqual("Hello\r\nWorld".firstParagraph, "Hello")
+        XCTAssertEqual("Hello\r\nWorld".firstParagraph, "Hello")
+        XCTAssertEqual("Hello World\n".firstParagraph, "Hello World")
     }
 
     static var allTests = [
-        ("testExample", testExample),
+        ("testStringFirstParagraph", testStringFirstParagraph),
     ]
 }
