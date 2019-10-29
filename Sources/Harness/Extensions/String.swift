@@ -35,24 +35,70 @@ public extension String {
     }
 
     func appendLine(to url: URL) throws {
-         try (self + "\n").append(to: url)
-     }
+        try (self + "\n").append(to: url)
+    }
 
-     func append(to url: URL) throws {
-         let data = self.data(using: .utf8)!
-         try data.append(to: url)
-     }
+    func append(to url: URL) throws {
+        let data = self.data(using: .utf8)!
+        try data.append(to: url)
+    }
 
-     var firstParagraph: String {
-        if self.isEmpty {
-            return self
+    /*
+    Applies the Knuth-Plass line-breaking algorithm using the shortest-path method
+    (https://xxyxyz.org/line-breaking/) to a paragraph of text with the specified width
+    and returns an array of lines. Behaviour is undefined if line breaks are present,
+    so the use of the output of String.paragraphs is suggested.
+    - Parameter width: Desired maximum line length.
+
+    - Returns: '[String]' array.
+    */
+    func lines(width: Int) -> [String] {
+        let paragraphs = self.paragraphs
+        var lines: [String] = []
+        for paragraph in paragraphs {
+            lines.append(contentsOf: paragraph.shortestPathLineBreak(width: width))
         }
-        return self.components(separatedBy: CharacterSet.newlines).first ?? self
-     }
+        return lines
+    }
 
-     // From https://useyourloaf.com/blog/empty-strings-in-swift/
-     var isBlank: Bool {
-         return allSatisfy { $0.isWhitespace }
+    private func shortestPathLineBreak (width: Int) -> [String] {
+        let words = self.components(separatedBy: .whitespaces)
+        let count = words.count
+        var offsets: [Int] = [0]
+
+        for word in words {
+            offsets.append(offsets.last! + word.count)
+        }
+
+        var minima: [Int] = [Int](repeating: Int.max, count: count + 1)
+        minima[0] = 0
+        var breaks: [Int] = [Int](repeating: 0, count: count + 1)
+
+        var w, i, j, cost: Int
+        for i in 0..<count {
+            j = i + 1
+            while j <= count {
+                w = offsets[j] - offsets[i] + j - i - 1
+                if w > width {
+                    break
+                }
+                cost = minima[i] + (width - w) * (width - w)
+                if cost < minima[j] {
+                    minima[j] = cost
+                    breaks[j] = i
+                }
+                j += 1
+            }
+        }
+        var lines: [String] = []
+        j = count
+        while j > 0 {
+            i = breaks[j]
+            lines.append(words[i..<j].joined(separator: " "))
+            j = i
+        }
+        lines.reverse()
+        return lines
     }
 }
 
