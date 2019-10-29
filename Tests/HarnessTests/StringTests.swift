@@ -16,6 +16,10 @@ final class StringTests: XCTestCase {
         XCTAssertEqual("Hello\r\nWorld".paragraphs, ["Hello", "World"])
     }
 
+    func testStringParagraphsBlankLine () {
+        XCTAssertEqual("Hello\n\nWorld".paragraphs, ["Hello", "", "World"])
+    }
+
     func testStringParagraphsWTFBreak () {
         XCTAssertEqual("Hello\rWorld".paragraphs, ["Hello", "World"])
     }
@@ -42,6 +46,7 @@ final class StringTests: XCTestCase {
         ("testStringParagraphsEmptyLine", testStringParagraphsEmptyLine),
         ("testStringParagraphsUnixBreak", testStringParagraphsUnixBreak),
         ("testStringParagraphsWindowsBreak", testStringParagraphsWindowsBreak),
+        ("testStringParagraphsBlankLine", testStringParagraphsBlankLine),
         ("testStringParagraphsWTFBreak", testStringParagraphsWTFBreak),
         ("testStringParagraphsBreakAtEnd", testStringParagraphsBreakAtEnd),
         ("testStringFirstParagraph", testStringFirstParagraph),
