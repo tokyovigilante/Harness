@@ -52,7 +52,7 @@ public extension String {
 
     - Returns: '[String]' array.
     */
-    func lines(width: Int) -> [String] {
+    func lines (width: Int) -> [String] {
         let paragraphs = self.paragraphs
         var lines: [String] = []
         for paragraph in paragraphs {
@@ -61,8 +61,32 @@ public extension String {
         return lines
     }
 
+    func words (clampTo width: Int? = nil) -> [String] {
+        var words = self.components(separatedBy: .whitespaces)
+        guard let width = width else {
+            return words
+        }
+        var i = 0
+        while i < words.count {
+            let word = words[i]
+            let wordLength = word.count
+            if wordLength > width {
+                let splitWord = stride(from: 0, to: wordLength, by: width).map { (position: Int) -> String in
+                    let start = word.index(word.startIndex, offsetBy: position)
+                    let end = word.index(word.startIndex, offsetBy: min(position + width, count))
+                    return String(word[start..<end])
+                }
+                words.replaceSubrange(i...i, with: splitWord)
+                i += splitWord.count
+                continue
+            }
+            i += 1
+        }
+        return words
+    }
+
     private func shortestPathLineBreak (width: Int) -> [String] {
-        let words = self.components(separatedBy: .whitespaces)
+        let words = self.words(clampTo: width)
         let count = words.count
         var offsets: [Int] = [0]
 
@@ -74,7 +98,7 @@ public extension String {
         minima[0] = 0
         var breaks: [Int] = [Int](repeating: 0, count: count + 1)
 
-        var w, i, j, cost: Int
+        var w, j, cost: Int
         for i in 0..<count {
             j = i + 1
             while j <= count {
@@ -90,6 +114,7 @@ public extension String {
                 j += 1
             }
         }
+        var i: Int
         var lines: [String] = []
         j = count
         while j > 0 {
