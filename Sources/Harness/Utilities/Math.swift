@@ -15,6 +15,3 @@ func ** (_ base: Float, _ exp: Float) -> Float {
   return pow(base, exp)
 }
 
-func ** (_ base: Int, _ exp: Int) -> Int {
-  return Int(pow(Double(base), Double(exp)))
-}
