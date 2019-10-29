@@ -2,7 +2,24 @@ import Foundation
 
 public extension String {
 
-  /*
+    var paragraphs: [String] {
+        var result: [String] = []
+        self.enumerateLines { line, stop in
+            result.append(line)
+        }
+        return result
+    }
+
+    var firstParagraph: String {
+        return self.paragraphs.first ?? self
+    }
+
+    // From https://useyourloaf.com/blog/empty-strings-in-swift/
+    var isBlank: Bool {
+         return allSatisfy { $0.isWhitespace }
+    }
+
+    /*
     Truncates the string to the specified length number of characters and appends an optional trailing string if longer.
     - Parameter length: Desired maximum lengths of a string
     - Parameter trailing: A 'String' that will be appended after the truncation.
