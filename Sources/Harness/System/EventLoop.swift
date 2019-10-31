@@ -209,7 +209,6 @@ fileprivate class EventLoop {
 	private func runLoopEntry () {
   		if _acquiredLoopLevel == -1 {
       		if g_main_context_acquire(nil) == 1 {
-	  			Log.verbose("EventLoop: Beginning tracking run loop activity")
 	  			_acquiredLoopLevel = _currentLoopLevel
 			} else {
             	/* If we fail to acquire the main context, that means someone is iterating
@@ -360,7 +359,6 @@ fileprivate class EventLoop {
         if (_currentLoopLevel + 1) == _acquiredLoopLevel {
             g_main_context_release(nil)
             _acquiredLoopLevel = -1
-            Log.debug("EventLoop: Ended tracking run loop activity")
         }
     }
 
