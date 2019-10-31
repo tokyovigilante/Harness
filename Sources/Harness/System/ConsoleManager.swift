@@ -8,6 +8,9 @@
 import Foundation
 import HeliumLogger
 import LoggerAPI
+#if os(Linux)
+import CGLib
+#endif
 
 //typealias ConsoleOptions = (path: String, interactive: Bool, args: [String])
 
@@ -22,17 +25,20 @@ fileprivate struct LogOutputStream: TextOutputStream {
     var destinations: [LogDestination]
 
     func write(_ text: String) {
-        if destinations.contains(.console) {
-            fputs(text, stderr)
-        }
-        if destinations.contains(.file) {
-            do {
-                try text.append(to: logURL)
-            } catch let error {
-                Log.warning("Logging to \(logURL) failed: \(error.localizedDescription)")
+        DispatchQueue.main.async {
+            if self.destinations.contains(.console) {
+                fputs(text, stderr)
+            }
+            if self.destinations.contains(.file) {
+                do {
+                    try text.append(to: self.logURL)
+                } catch let error {
+                    Log.warning("Logging to \(self.logURL) failed: \(error.localizedDescription)")
+                }
             }
         }
     }
+
 }
 
 public class ConsoleManager {
@@ -69,10 +75,25 @@ public class ConsoleManager {
 
         Log.logger = logger
     }
+
+#if os(Linux)
+    public static func redirectGLibLogging (for domains: [String]) {
+        let flags = GLogLevelFlags(rawValue:
+                G_LOG_LEVEL_MASK.rawValue |
+                G_LOG_FLAG_FATAL.rawValue |
+                G_LOG_FLAG_RECURSION.rawValue
+        )
+        for domain in domains {
+            _ = g_log_set_handler(domain, flags, glibLogHandler, nil)
+        }
+    }
+#endif
+}
+
 /*
     static func processCommandLine () throws -> ConsoleOptions {
         let parser = ArgumentParser(commandName: LocalStorage.executableName, usage: "[interactive]", overview: "Context-sensitive Automation for macOS")
-        let interactive: OptionArgument<Bool> = parser.add(option: "--consoleInteractive", kind: Bool.self, usage: "Show console UI in foreground"/*, completion: .values(["--consoleInteractive"])*/)
+        let interactive: OptionArgument<Bool> = parser.add(option: "--consoleInteractive", kind: Bool.self, usage: "Show console UI in foreground", completion: .values(["--consoleInteractive"]))
         guard let path = CommandLine.arguments.first else {
             exit(0)
         }
@@ -83,5 +104,40 @@ public class ConsoleManager {
     }
 */
 
+#if os(Linux)
+
+private extension LoggerMessageType {
+
+    init? (gLevel level: GLogLevelFlags) {
+        switch level {
+        case G_LOG_LEVEL_DEBUG:
+            self = .debug
+        case G_LOG_LEVEL_INFO:
+            self = .verbose
+        case G_LOG_LEVEL_INFO:
+            self = .info
+        case G_LOG_LEVEL_WARNING:
+            self = .warning
+        case G_LOG_LEVEL_CRITICAL, G_LOG_LEVEL_ERROR, G_LOG_FLAG_RECURSION, G_LOG_FLAG_FATAL:
+            self = .error
+        default:
+            return nil
+        }
+    }
+
 }
 
+fileprivate var glibLogHandler: @convention(c) (UnsafePointer<Int8>?,
+        GLogLevelFlags, UnsafePointer<Int8>?, UnsafeMutableRawPointer?) -> Void = { (log_domain, log_level, message, user_data) in
+
+    var level = LoggerMessageType(gLevel: log_level)
+    if level == nil {
+        Log.warning("Unknown GLib log level \(log_level)")
+    }
+    guard let message = message, var messageString = String(cString: message, encoding: .utf8) else {
+        Log.debug("Invalid Glib log message")
+        return
+    }
+    Log.logger?.log(level ?? .warning, msg: messageString, functionName: #function, lineNum: #line, fileName: #file)
+}
+#endif
