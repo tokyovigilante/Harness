@@ -42,6 +42,13 @@ final class StringTests: XCTestCase {
         XCTAssertEqual("Hello\nWorld".lines(width: 12), ["Hello", "World"])
     }
 
+    func testStringTruncate () {
+        XCTAssertEqual("Hello World".truncate(7, trimmingWhitespace: true), "Hello…")
+        XCTAssertEqual("Hello World".truncate(7, trimmingWhitespace: false), "Hello …")
+        XCTAssertEqual("Hello World".truncate(5, trimmingWhitespace: false), "Hell…")
+
+
+    }
     static var allTests = [
         ("testStringParagraphsEmptyLine", testStringParagraphsEmptyLine),
         ("testStringParagraphsUnixBreak", testStringParagraphsUnixBreak),
@@ -51,5 +58,6 @@ final class StringTests: XCTestCase {
         ("testStringParagraphsBreakAtEnd", testStringParagraphsBreakAtEnd),
         ("testStringFirstParagraph", testStringFirstParagraph),
         ("testLineBreakingAlgorithm", testLineBreakingAlgorithm),
+        ("testStringTruncate", testStringTruncate),
     ]
 }

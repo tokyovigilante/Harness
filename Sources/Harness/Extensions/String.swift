@@ -23,11 +23,19 @@ public extension String {
     Truncates the string to the specified length number of characters and appends an optional trailing string if longer.
     - Parameter length: Desired maximum lengths of a string
     - Parameter trailing: A 'String' that will be appended after the truncation.
+    - Parameter trimWhitespace: 'Bool' whether to strip trailing whitespace before appending truncation character
 
     - Returns: 'String' object.
     */
-    func truncate (_ length: Int, trailing: String = "…") -> String {
-        return (self.count > length && self.count > 1) ? self.prefix(length-1) + trailing : self
+    func truncate (_ length: Int, trailing: String = "…", trimmingWhitespace trim: Bool = true) -> String {
+        if self.count > length {
+            let truncatedSelf = self.prefix(length-1)
+            return trim
+                    ? truncatedSelf.trimmingCharacters(in: .whitespacesAndNewlines) + trailing
+                    : truncatedSelf + trailing
+        }
+        return self
+        //return (self.count > length && self.count > 1) ? self.prefix(length-1) + trailing : self
     }
 
     func stripEmoji() -> String {
