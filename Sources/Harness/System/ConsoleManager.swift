@@ -23,19 +23,32 @@ fileprivate struct LogOutputStream: TextOutputStream {
 
     let logURL: URL
     var destinations: [LogDestination]
+    var async: Bool
 
     func write(_ text: String) {
+        if async {
+            asyncWrite(text)
+        } else {
+            syncWrite(text)
+        }
+    }
+
+    private func syncWrite (_ text: String) {
+        if self.destinations.contains(.console) {
+            fputs(text, stderr)
+        }
+        if self.destinations.contains(.file) {
+            do {
+                try text.append(to: self.logURL)
+            } catch let error {
+                Log.warning("Logging to \(self.logURL) failed: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    private func asyncWrite (_ text: String) {
         DispatchQueue.main.async {
-            if self.destinations.contains(.console) {
-                fputs(text, stderr)
-            }
-            if self.destinations.contains(.file) {
-                do {
-                    try text.append(to: self.logURL)
-                } catch let error {
-                    Log.warning("Logging to \(self.logURL) failed: \(error.localizedDescription)")
-                }
-            }
+            syncWrite(text)
         }
     }
 
@@ -44,14 +57,14 @@ fileprivate struct LogOutputStream: TextOutputStream {
 public class ConsoleManager {
 
     public static func configureLogging (_ mode: LoggerMessageType = .verbose,
-            detailed: Bool = false, destinations: [LogDestination] = [.console]) throws {
+            detailed: Bool = false, destinations: [LogDestination] = [.console], async: Bool = true) throws {
 
         if destinations.isEmpty {
             return
         }
 
         let logURL = LocalStorage.logURL
-        let outputStream = LogOutputStream(logURL: logURL, destinations: destinations)
+        let outputStream = LogOutputStream(logURL: logURL, destinations: destinations, async: async)
         let logger = HeliumStreamLogger(mode, outputStream: outputStream)
 
         if destinations.contains(.file) {
