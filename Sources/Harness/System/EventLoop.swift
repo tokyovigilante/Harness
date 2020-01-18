@@ -149,7 +149,7 @@ fileprivate class EventLoop {
                 CFRunLoopObserverContext(version: 0, info: unsafeSelf,
                 retain: nil, release: nil, copyDescription: nil)
         let observer =
-                CFRunLoopObserverCreate(nil, UInt(kCFRunLoopAllActivities),
+                CFRunLoopObserverCreate(nil, CFRunLoopActivity.allActivities.rawValue,
                 true, 0, runLoopObserverCallback, &observerContext)
 	    CFRunLoopAddObserver(_mainRunLoop.getCFRunLoop(), observer,
                 kCFRunLoopCommonModes)
@@ -175,10 +175,10 @@ fileprivate class EventLoop {
 	}
 
     private func runLoopCallback (activity: CFRunLoopActivity) {
-        switch Int(activity) {
-        case kCFRunLoopEntry:
+        switch activity {
+        case .entry:
             _currentLoopLevel += 1
-        case kCFRunLoopExit:
+        case .exit:
             assert(_currentLoopLevel > 0,
                    "Invalid _currentLoopLevel on kCFRunLoopExit")
             _currentLoopLevel -= 1;
@@ -188,18 +188,18 @@ fileprivate class EventLoop {
         if _gettingEvents > 0 { /* Activity we triggered */
             return
         }
-        switch Int(activity) {
-        case kCFRunLoopEntry:
+        switch activity {
+        case .entry:
             runLoopEntry()
-        case kCFRunLoopBeforeTimers:
+        case .beforeTimers:
             runLoopBeforeTimers()
-        case kCFRunLoopBeforeSources:
+        case .beforeSources:
             runLoopBeforeSources()
-        case kCFRunLoopBeforeWaiting:
+        case .beforeWaiting:
             runLoopBeforeWaiting()
-        case kCFRunLoopAfterWaiting:
+        case .afterWaiting:
             runLoopAfterWaiting()
-        case kCFRunLoopExit:
+        case .exit:
             runLoopExit()
         default:
             break
