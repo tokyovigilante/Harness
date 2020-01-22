@@ -32,6 +32,16 @@ public struct InputPointerEvent {
     public var button: Int
     public var state: Int
     public var modifiers: InputModifier
+
+    public init (type: PointerEventType, time: Int, x: Double, y: Double, button: Int, state: Int, modifiers: InputModifier) {
+        self.type = type
+        self.time = time
+        self.x = x
+        self.y = y
+        self.button = button
+        self.state = state
+        self.modifiers = modifiers
+    }
 }
 
 public enum AxisEventType {
@@ -52,7 +62,18 @@ public struct InputAxisEvent {
     public var axis: AxisDirection
     public var value: Double
     public var modifiers: InputModifier
+
+    public init (type: AxisEventType, time: Int, x: Double, y: Double, axis: AxisDirection, value: Double, modifiers: InputModifier) {
+        self.type = type
+        self.time = time
+        self.x = x
+        self.y = y
+        self.axis = axis
+        self.value = value
+        self.modifiers = modifiers
+    }
 }
+
 
 public struct InputKeyboardEvent {
     public var time: UInt32
@@ -60,5 +81,13 @@ public struct InputKeyboardEvent {
     public var hardwareKeyCode: UInt32
     public var pressed: Bool
     public var modifiers: InputModifier
+
+    public init (time: UInt32, keyCode: UInt32, hardwareKeyCode: UInt32, pressed: Bool, modifiers: InputModifier) {
+        self.time = time
+        self.keyCode = keyCode
+        self.hardwareKeyCode = hardwareKeyCode
+        self.pressed = pressed
+        self.modifiers = modifiers
+    }
 }
 
