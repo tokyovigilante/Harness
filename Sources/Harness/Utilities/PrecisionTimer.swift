@@ -40,9 +40,9 @@ fileprivate func currentTime () -> TimeInterval {
     return currentTime
 }
 
-@discardableResult func measure<A>(name: String = "", _ block: () -> A) -> A {
+@discardableResult public func measure<A>(name: String = "", _ block: () -> A) -> A {
     let startTime = PrecisionTimer()
     let result = block()
-    print("Time: \(name) - \(startTime.elapsed)")
+    print("\(name) - elapsed: " + String(format: "%.2f", startTime.elapsed) + "s")
     return result
 }
