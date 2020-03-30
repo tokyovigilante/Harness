@@ -1,9 +1,9 @@
 
-public let MimeTypes: [String: String] = [
-    "html": "text/html",
-    "css": "text/css",
-    "otf": "application/x-font-opentype",
-    "json": "application/json",
-    "js": "text/javascript",
-    "svg": "image/svg"
-]
+public enum MimeTypes: String {
+    case html = "text/html"
+    case css = "text/css"
+    case otf = "application/x-font-opentype"
+    case json = "application/json"
+    case js = "text/javascript"
+    case svg = "image/svg"
+}
