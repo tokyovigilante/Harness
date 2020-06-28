@@ -83,11 +83,6 @@ fileprivate class EventLoop {
      */
     private let _oldPollFunc: GPollFunc
 
-	/* Reference to the run loop of the main thread. (There is a unique
-	 * CFRunLoop per thread.)
-	 */
-	private let _mainRunLoop: RunLoop
-
 	/* Flag when we've called nextEventMatchingMask ourself; this triggers
 	 * a run loop iteration, so we need to detect that and avoid triggering
 	 * our "run the GLib main looop while the run loop is active machinery.
@@ -137,7 +132,6 @@ fileprivate class EventLoop {
 
 	private init () {
         assert(Thread.isMainThread, "EventLoop must be created on main thread")
-        _mainRunLoop = RunLoop.main
 #if os(Linux)
         _oldPollFunc = g_main_context_get_poll_func(nil)
         //g_main_context_set_poll_func(nil, pollFunc)
@@ -151,14 +145,14 @@ fileprivate class EventLoop {
         let observer =
                 CFRunLoopObserverCreate(nil, CFRunLoopActivity.allActivities.rawValue,
                 true, 0, runLoopObserverCallback, &observerContext)
-	    CFRunLoopAddObserver(_mainRunLoop.getCFRunLoop(), observer,
+	    CFRunLoopAddObserver(CFRunLoopGetMain(), observer,
                 kCFRunLoopCommonModes)
 #endif
 	}
 
 	fileprivate func run() {
         assert(Thread.isMainThread, "EventLoop must be run on main thread")
-		_mainRunLoop.run()
+		RunLoop.main.run()
 	}
 
 #if os(Linux)
@@ -303,7 +297,7 @@ fileprivate class EventLoop {
 
         if readyCount > 0 || timeout == 0 {
             /* We have stuff to do, no sleeping allowed! */
-            CFRunLoopWakeUp(_mainRunLoop.getCFRunLoop())
+            CFRunLoopWakeUp(CFRunLoopGetMain())
         } else if (timeout > 0) {
             /* We need to get the run loop to break out of its wait when our
              * timeout expires. We do this by adding a dummy timer that we'll
@@ -319,7 +313,7 @@ fileprivate class EventLoop {
 					     0, /* order (priority) */
 					     runLoopDummyTimerCallback,
 					     nil)
-            CFRunLoopAddTimer(_mainRunLoop.getCFRunLoop(), _runLoopTimer,
+            CFRunLoopAddTimer(CFRunLoopGetMain(), _runLoopTimer,
                 kCFRunLoopCommonModes)
         }
         _runLoopPollingAsync = readyCount < 0
@@ -337,7 +331,7 @@ fileprivate class EventLoop {
          * before_waiting() by doing the check() and dispatch() stages.
          */
         if _runLoopTimer != nil {
-            CFRunLoopRemoveTimer(_mainRunLoop.getCFRunLoop(), _runLoopTimer,
+            CFRunLoopRemoveTimer(CFRunLoopGetMain(), _runLoopTimer,
                     kCFRunLoopCommonModes)
             _runLoopTimer = nil
         }
@@ -377,7 +371,7 @@ fileprivate class EventLoop {
         let selectMainThreadSource =
                 CFRunLoopSourceCreate(nil, 0, &sourceContext)
 
-        CFRunLoopAddSource(_mainRunLoop.getCFRunLoop(), selectMainThreadSource,
+        CFRunLoopAddSource(CFRunLoopGetMain(), selectMainThreadSource,
                 kCFRunLoopCommonModes)
 
         _selectThreadState = .waiting
@@ -723,7 +717,7 @@ fileprivate class EventLoop {
         * race condition (the loop could go into waiting state right after
         * we checked).
         */
-        CFRunLoopWakeUp(_mainRunLoop.getCFRunLoop())
+        CFRunLoopWakeUp(CFRunLoopGetMain())
     }
 
 
