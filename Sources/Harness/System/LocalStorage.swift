@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import LoggerAPI
 
 /// Functions to store support files on device
 public class LocalStorage {
@@ -47,7 +46,7 @@ public class LocalStorage {
 
     public class func createContainingFolder(for url: URL) throws {
         let folderURL = url.deletingLastPathComponent()
-        Log.debug("Creating folder \(folderURL.path) for \(url.lastPathComponent)")
+        HarnessLogger.shared.debug("Creating folder \(folderURL.path) for \(url.lastPathComponent)")
         try FileManager.default.createDirectory(at: folderURL, withIntermediateDirectories: true, attributes: nil)
     }
 }

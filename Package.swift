@@ -9,9 +9,7 @@ let package = Package(
             name: "Harness",
             targets: ["Harness"]),
     ],
-    dependencies: [
-        .package(url: "https://github.com/tokyovigilante/HeliumLogger", .branch("master")),
-    ],
+    dependencies: [],
     targets: [
         .systemLibrary(
             name: "CInotify"
@@ -23,7 +21,6 @@ let package = Package(
         .target(
             name: "Harness",
             dependencies: [
-                "HeliumLogger",
                 "CInotify",
                 "CGLib",
             ]

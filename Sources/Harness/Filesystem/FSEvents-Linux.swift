@@ -12,7 +12,8 @@ import CInotify
 import Dispatch
 import Foundation
 import Glibc
-import LoggerAPI
+
+//FIXME: Should not be logging verbosely from library
 
 private let allEvents = UInt32(IN_ACCESS | IN_MODIFY | IN_ATTRIB | IN_CLOSE_WRITE |              IN_CLOSE_NOWRITE | IN_OPEN | IN_MOVED_FROM | IN_MOVED_TO | IN_DELETE | IN_CREATE | IN_DELETE_SELF)
 
@@ -29,7 +30,7 @@ public class FSEvents: FSEventsProtocol {
     private (set) public var state: FSEventsState = .stopped {
         didSet {
             if case let .error(message) = state {
-                Log.error("\(message)")
+                HarnessLogger.shared.error("\(message)")
             }
         }
     }
@@ -56,12 +57,12 @@ public class FSEvents: FSEventsProtocol {
             self.readEvents()
         }
         state = .running
-        Log.verbose("Started FSEvents monitoring with inotify")
+        HarnessLogger.shared.info("Started FSEvents monitoring with inotify")
     }
 
     private func readEvents () {
         if cancel {
-            Log.debug("Stopped watching fs events")
+            HarnessLogger.shared.debug("Stopped watching fs events")
             close(inotifyFD)
             inotifyFD = -1
             cancel = false
@@ -73,7 +74,7 @@ public class FSEvents: FSEventsProtocol {
         }
         let readBytes = read(inotifyFD, buffer, 4096)
         if readBytes == -1 && errno != EAGAIN {
-            Log.error("inotify socket read failed: \(PosixErrors.errorString(errno))")
+            HarnessLogger.shared.error("inotify socket read failed: \(PosixErrors.errorString(errno))")
             return
         }
         var eventPointer: UnsafeMutablePointer<inotify_event>? = nil
@@ -82,7 +83,7 @@ public class FSEvents: FSEventsProtocol {
             while offset < readBytes {
                 eventPointer = buffer.advanced(by: offset).bindMemory(to: inotify_event.self, capacity: 1)
                 guard let event = eventPointer?.pointee else {
-                    Log.error("inotify socket read failed: invalid inotify_event data recieved, length \(readBytes))")
+                    HarnessLogger.shared.error("inotify socket read failed: invalid inotify_event data recieved, length \(readBytes))")
                     return
                 }
                 process(event: event)
@@ -109,7 +110,7 @@ public class FSEvents: FSEventsProtocol {
 
     private func process (event: inotify_event) {
         guard let id = uuidMap[event.wd] else {
-            Log.error("Unknown \(event.wd)")
+            HarnessLogger.shared.error("Unknown \(event.wd)")
             return
         }
         guard let closure = watchList[id.0] else {
@@ -118,7 +119,7 @@ public class FSEvents: FSEventsProtocol {
         let mask = event.mask
         for type in allInotifyTypes {
             if mask & type == mask, let fsEventType = FSEventType(inotifyEnum: type) {
-                /*Log.debug("Got inotify event \(event.wd): type: \(fsEventType), cookie: \(event.cookie), len: \(event.len)")*/
+                /*HarnessLogger.shared.debug("Got inotify event \(event.wd): type: \(fsEventType), cookie: \(event.cookie), len: \(event.len)")*/
                 let fsEvent = FSEvent(
                                 uuid: id.0,
                                 descriptor: Int(event.wd),
@@ -158,7 +159,7 @@ public class FSEvents: FSEventsProtocol {
             self?.watchList.removeValue(forKey: id)
             self?.uuidMap.removeValue(forKey: wd)
         }
-        Log.debug("Watching \(item) \(types):\(inotifyMask) (\(wd):\(id))")
+        HarnessLogger.shared.debug("Watching \(item) \(types):\(inotifyMask) (\(wd):\(id))")
         return token
     }
 
@@ -178,11 +179,11 @@ public class FSEvents: FSEventsProtocol {
         cancel = true
         while state == .running {
             if cancelTime.elapsed > 0.2 {
-                Log.error("Failed to stop FSEvents watcher in reasonable time")
+                HarnessLogger.shared.error("Failed to stop FSEvents watcher in reasonable time")
                 break
             }
         }
-        Log.debug("FSEvents stopped watching in \(cancelTime.elapsed)s")
+        HarnessLogger.shared.debug("FSEvents stopped watching in \(cancelTime.elapsed)s")
     }
 
     deinit {
@@ -190,7 +191,7 @@ public class FSEvents: FSEventsProtocol {
             do {
                 try stopWatching()
             } catch let error {
-                Log.error(error.localizedDescription)
+                HarnessLogger.shared.error(error.localizedDescription)
             }
         }
     }

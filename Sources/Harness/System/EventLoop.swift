@@ -28,7 +28,6 @@ import Glibc
 #endif
 import CoreFoundation
 import Foundation
-import LoggerAPI
 
 public func eventLoopRun () {
 	EventLoop.shared.run()
@@ -160,7 +159,7 @@ fileprivate class EventLoop {
             (CFRunLoopObserver?, CFRunLoopActivity, UnsafeMutableRawPointer?)
             -> Void = { observer, activity, data in
         guard let data = data else {
-            Log.error("invalid EventLoop object")
+            HarnessLogger.shared.error("invalid EventLoop object")
             return
         }
         let eventLoop = Unmanaged<EventLoop>.fromOpaque(data)
@@ -215,7 +214,7 @@ fileprivate class EventLoop {
             	 * thread that does g_main_context_wait() and then wakes us back up, but
             	 * the gain doesn't seem worth the complexity.
             	 */
-			  	Log.warning("EventLoop: Can't acquire main loop")
+			  	HarnessLogger.shared.warn("EventLoop: Can't acquire main loop")
 			}
     	}
 	}
@@ -252,7 +251,7 @@ fileprivate class EventLoop {
 
 		if g_main_context_check(context, maxPriority,
                 _pollFDs, Int32(fdCount)) != 0   {
-		    //Log.debug("EventLoop: Dispatching high priority sources")
+		    //HarnessLogger.shared.debug("EventLoop: Dispatching high priority sources")
 		    g_main_context_dispatch(context)
 	    }
 	}
@@ -303,7 +302,7 @@ fileprivate class EventLoop {
              * timeout expires. We do this by adding a dummy timer that we'll
              * remove immediately after the wait wakes up.
              */
-            /*Log.debug("""
+            /*HarnessLogger.shared.debug("""
                     EventLoop: Adding timer to wake us up in \(timeout) ms
                     """)*/
             _runLoopTimer = CFRunLoopTimerCreate(nil, /* allocator */
@@ -343,7 +342,7 @@ fileprivate class EventLoop {
 
         if g_main_context_check(context, _runLoopMaxPriority, _pollFDs,
                 Int32(_pollFDCount)) == 1 {
-            //Log.debug("EventLoop: Dispatching after waiting")
+            //HarnessLogger.shared.debug("EventLoop: Dispatching after waiting")
             g_main_context_dispatch(context)
         }
     }
@@ -381,7 +380,7 @@ fileprivate class EventLoop {
                     == 0 {
                 break
             }
-            Log.warning("Failed to create select thread, sleeping and trying again")
+            HarnessLogger.shared.warn("Failed to create select thread, sleeping and trying again")
             sleep(1)
         }
     }
@@ -455,7 +454,7 @@ fileprivate class EventLoop {
         }
 
         if count == 0 || (count == 1 && pollFDIndex >= 0) {
-            Log.debug("EventLoop: Nothing to poll")
+            HarnessLogger.shared.debug("EventLoop: Nothing to poll")
             return 0
         }
 
@@ -550,7 +549,7 @@ fileprivate class EventLoop {
         }
 
         if haveNewPollFDs {
-            /*Log.debug("""
+            /*HarnessLogger.shared.debug("""
                     EventLoop: Submitting a new set of file descriptors to the select thread
             """)*/
             assert(_nextPollFDs == nil)
@@ -703,7 +702,7 @@ fileprivate class EventLoop {
     }
 
     func signalMainThread () {
-        //Log.debug("EventLoop: Waking up main thread")
+        //HarnessLogger.shared.debug("EventLoop: Waking up main thread")
 
         /* If we are in nextEventMatchingMask, then we need to make sure an
         * event gets queued, otherwise it's enough to simply wake up the
@@ -731,7 +730,7 @@ fileprivate func selectThreadCallback (arg: UnsafeMutableRawPointer?) ->
         UnsafeMutableRawPointer? {
 
     guard let arg = arg else {
-        Log.error("Invalid selectThreadFunc argument")
+        HarnessLogger.shared.error("Invalid selectThreadFunc argument")
         return nil
     }
     let eventLoop = Unmanaged<EventLoop>.fromOpaque(arg).takeUnretainedValue()
@@ -740,7 +739,7 @@ fileprivate func selectThreadCallback (arg: UnsafeMutableRawPointer?) ->
 }
 
 fileprivate func gotFDActivity (info: UnsafeMutableRawPointer?) {
-    Log.debug("Got FD activity")
+    HarnessLogger.shared.debug("Got FD activity")
   /*NSEvent *event;
 
   // Post a message so we'll break out of the message loop
@@ -756,7 +755,3 @@ fileprivate func gotFDActivity (info: UnsafeMutableRawPointer?) {
 
   [NSApp postEvent:event atStart:YES];*/
 }
-
-
-
-

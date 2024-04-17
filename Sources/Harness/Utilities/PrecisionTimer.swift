@@ -5,7 +5,6 @@ import Glibc
 import QuartzCore
 #endif
 import Foundation
-import LoggerAPI
 
 public struct PrecisionTimer {
     public let startTime: TimeInterval
@@ -33,7 +32,7 @@ fileprivate func currentTime () -> TimeInterval {
     if clock_gettime(CLOCK_MONOTONIC_RAW, &timeSpec) == 0 {
         currentTime = convertToSeconds(time: timeSpec)
     } else {
-        Log.error("CLOCK_MONOTONIC_RAW access failed: \(errno)")
+        HarnessLogger.shared.error("CLOCK_MONOTONIC_RAW access failed: \(errno)")
         currentTime = 0
     }
 #endif
@@ -43,6 +42,6 @@ fileprivate func currentTime () -> TimeInterval {
 @discardableResult public func measure<A>(name: String = "", _ block: () -> A) -> A {
     let startTime = PrecisionTimer()
     let result = block()
-    print("\(name) - elapsed: " + String(format: "%.2f", startTime.elapsed) + "s")
+    HarnessLogger.shared.info("\(name) - elapsed: " + String(format: "%.2f", startTime.elapsed) + "s")
     return result
 }
